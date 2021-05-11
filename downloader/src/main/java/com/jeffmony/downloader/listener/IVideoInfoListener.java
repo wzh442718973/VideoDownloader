@@ -16,4 +16,8 @@ public interface IVideoInfoListener {
     void onLiveM3U8Callback(VideoTaskItem info);
 
     void onM3U8InfoFailed(Throwable error);
+
+    //wzh add
+    String calculateRealVideoUrl(String url);
+    //wzh end
 }

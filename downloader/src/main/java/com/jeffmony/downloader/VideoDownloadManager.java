@@ -6,6 +6,7 @@ import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
 import android.text.TextUtils;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -44,6 +45,9 @@ public class VideoDownloadManager {
 
     private static volatile VideoDownloadManager sInstance = null;
     private DownloadListener mGlobalDownloadListener = null;
+    //wzh add
+    private OnRedirectListener mGlobalRedirectListener = null;
+    //wzh end
     private VideoDownloadDatabaseHelper mVideoDatabaseHelper = null;
     private VideoDownloadQueue mVideoDownloadQueue;
     private Object mQueueLock = new Object();
@@ -163,6 +167,15 @@ public class VideoDownloadManager {
         mGlobalDownloadListener = downloadListener;
     }
 
+    public interface OnRedirectListener {
+        String onRedirectUrl(String url);
+    }
+
+    public void setGlobalRedirectListener(@NonNull OnRedirectListener redirectListener) {
+        mGlobalRedirectListener = redirectListener;
+    }
+
+
     public void startDownload(VideoTaskItem taskItem) {
         if (taskItem == null || TextUtils.isEmpty(taskItem.getUrl()))
             return;
@@ -222,16 +235,19 @@ public class VideoDownloadManager {
         VideoInfoParserManager.getInstance().parseVideoInfo(taskItem, new IVideoInfoListener() {
             @Override
             public void onFinalUrl(String finalUrl) {
+                Log.e("wzh", "onFinalUrl: " + finalUrl);
             }
 
             @Override
             public void onBaseVideoInfoSuccess(VideoTaskItem taskItem) {
+                Log.e("wzh", "onBaseVideoInfoSuccess: " + taskItem);
                 startBaseVideoDownloadTask(taskItem, headers);
             }
 
             @Override
             public void onBaseVideoInfoFailed(Throwable error) {
                 LogUtils.w(TAG, "onInfoFailed error=" + error);
+                Log.e("wzh", "onBaseVideoInfoFailed: ", error);
                 int errorCode = DownloadExceptionUtils.getErrorCode(error);
                 taskItem.setErrorCode(errorCode);
                 taskItem.setTaskState(VideoTaskState.ERROR);
@@ -240,12 +256,14 @@ public class VideoDownloadManager {
 
             @Override
             public void onM3U8InfoSuccess(VideoTaskItem info, M3U8 m3u8) {
+                Log.e("wzh", "onM3U8InfoSuccess: " + info);
                 taskItem.setMimeType(info.getMimeType());
                 startM3U8VideoDownloadTask(taskItem, m3u8, headers);
             }
 
             @Override
             public void onLiveM3U8Callback(VideoTaskItem info) {
+                Log.e("wzh", "onLiveM3U8Callback: " + info);
                 LogUtils.w(TAG, "onLiveM3U8Callback cannot be cached.");
                 taskItem.setErrorCode(DownloadExceptionUtils.LIVE_M3U8_ERROR);
                 taskItem.setTaskState(VideoTaskState.ERROR);
@@ -254,11 +272,21 @@ public class VideoDownloadManager {
 
             @Override
             public void onM3U8InfoFailed(Throwable error) {
+                Log.e("wzh", "onM3U8InfoFailed: ", error);
                 LogUtils.w(TAG, "onM3U8InfoFailed : " + error);
                 int errorCode = DownloadExceptionUtils.getErrorCode(error);
                 taskItem.setErrorCode(errorCode);
                 taskItem.setTaskState(VideoTaskState.ERROR);
                 mVideoDownloadHandler.obtainMessage(DownloadConstants.MSG_DOWNLOAD_ERROR, taskItem).sendToTarget();
+            }
+
+            @Override
+            public String calculateRealVideoUrl(String url) {
+                if (mGlobalRedirectListener == null) {
+                    return url;
+                } else {
+                    return mGlobalRedirectListener.onRedirectUrl(url);
+                }
             }
         }, headers);
     }
@@ -612,7 +640,7 @@ public class VideoDownloadManager {
     private void handleOnDownloadSuccess(VideoTaskItem taskItem) {
         removeDownloadQueue(taskItem);
 
-        LogUtils.i(TAG, "handleOnDownloadSuccess shouldM3U8Merged="+mConfig.shouldM3U8Merged() + ", isHlsType="+taskItem.isHlsType());
+        LogUtils.i(TAG, "handleOnDownloadSuccess shouldM3U8Merged=" + mConfig.shouldM3U8Merged() + ", isHlsType=" + taskItem.isHlsType());
         if (mConfig.shouldM3U8Merged() && taskItem.isHlsType()) {
             doMergeTs(taskItem, taskItem1 -> {
                 mGlobalDownloadListener.onDownloadSuccess(taskItem1);

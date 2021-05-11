@@ -19,14 +19,14 @@ import java.util.List;
 
 public class VideoDownloadListActivity extends AppCompatActivity implements View.OnClickListener {
 
-    private static final String TAG = "DownloadFeatureActivity";
+    private static final String TAG = "wzh2";//"DownloadFeatureActivity";
 
     private Button mPauseAllBtn;
     private Button mStartAllBtn;
     private ListView mDownloadListView;
 
     private VideoDownloadListAdapter mAdapter;
-    private VideoTaskItem[] items = new VideoTaskItem[7];
+    private VideoTaskItem[] items = new VideoTaskItem[1];
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -42,7 +42,8 @@ public class VideoDownloadListActivity extends AppCompatActivity implements View
     }
 
     private void initDatas() {
-        VideoTaskItem item1 = new VideoTaskItem("https://v3.dious.cc/20201224/v04Vp1ES/index.m3u8", "https://i.loli.net/2021/04/18/WuAUZc85meB6D2Q.jpg", "test1");
+//        VideoTaskItem item1 = new VideoTaskItem("https://v3.dious.cc/20201224/v04Vp1ES/index.m3u8", "https://i.loli.net/2021/04/18/WuAUZc85meB6D2Q.jpg", "test1");
+        VideoTaskItem item1 = new VideoTaskItem("https://myflixer.to/watch-movie/david-byrnes-american-utopia-63834.3495477", null, "test1") ;
         VideoTaskItem item2 = new VideoTaskItem("https://v3.dious.cc/20201224/6Q1yAHRu/index.m3u8", "https://i.loli.net/2021/04/18/WuAUZc85meB6D2Q.jpg", "test2");
         VideoTaskItem item3 = new VideoTaskItem("https://v3.dious.cc/20201224/aQKzuq6G/index.m3u8", "https://i.loli.net/2021/04/18/WuAUZc85meB6D2Q.jpg", "test3");
         VideoTaskItem item4 = new VideoTaskItem("https://v3.dious.cc/20201224/WWTyUxS6/index.m3u8", "https://i.loli.net/2021/04/18/WuAUZc85meB6D2Q.jpg", "test3");
@@ -51,18 +52,23 @@ public class VideoDownloadListActivity extends AppCompatActivity implements View
         VideoTaskItem item7 = new VideoTaskItem("https://rrsp-1252816746.cos.ap-shanghai.myqcloud.com/0c1f023caa3bbefbe16a5ce564142bbe.mp4", "https://i.loli.net/2021/04/18/WuAUZc85meB6D2Q.jpg", "test6");
 
         items[0] = item1;
-        items[1] = item2;
-        items[2] = item3;
-        items[3] = item4;
-        items[4] = item5;
-        items[5] = item6;
-        items[6] = item7;
+//        items[1] = item2;
+//        items[2] = item3;
+//        items[3] = item4;
+//        items[4] = item5;
+//        items[5] = item6;
+//        items[6] = item7;
 
         mAdapter = new VideoDownloadListAdapter(this, R.layout.download_item, items);
         mDownloadListView.setAdapter(mAdapter);
 
         VideoDownloadManager.getInstance().fetchDownloadItems(mInfosCallback);
-
+        VideoDownloadManager.getInstance().setGlobalRedirectListener(new VideoDownloadManager.OnRedirectListener() {
+            @Override
+            public String onRedirectUrl(String url) {
+                return "https://b-g-eu-1.betterstream.co:2222/v2-hls-playback/73355e1315b5fdc780d19651e8c99dfd4d92f06d3e8cfbd414d4a50c38344b5752620175885cb985dc87b388b7fdfe720d3c4efe11f3bfd6dde18ad470311e9121f605ea591800d83f8d0e0c2d2ef04e0fc437f46ca6b7837b16e0d8003db2fe11050c3834a040ca6c970d86394278ff16836958c5bcafb8e0bade1f4ef17f3f141565c921d9502095b456688dcbeaf6331f3fb27c6c64fefb31c8729541678e/720/index.m3u8";
+            }
+        });
         mDownloadListView.setOnItemClickListener((parent, view, position, id) -> {
             VideoTaskItem item = items[position];
             if (item.isInitialTask()) {
@@ -83,25 +89,25 @@ public class VideoDownloadListActivity extends AppCompatActivity implements View
 
         @Override
         public void onDownloadDefault(VideoTaskItem item) {
-            LogUtils.w(TAG,"onDownloadDefault: " + item);
+            LogUtils.w(TAG, "onDownloadDefault: " + item);
             notifyChanged(item);
         }
 
         @Override
         public void onDownloadPending(VideoTaskItem item) {
-            LogUtils.w(TAG,"onDownloadPending: " + item);
+            LogUtils.w(TAG, "onDownloadPending: " + item);
             notifyChanged(item);
         }
 
         @Override
         public void onDownloadPrepare(VideoTaskItem item) {
-            LogUtils.w(TAG,"onDownloadPrepare: " + item);
+            LogUtils.w(TAG, "onDownloadPrepare: " + item);
             notifyChanged(item);
         }
 
         @Override
         public void onDownloadStart(VideoTaskItem item) {
-            LogUtils.w(TAG,"onDownloadStart: " + item);
+            LogUtils.w(TAG, "onDownloadStart: " + item);
             notifyChanged(item);
         }
 
@@ -126,19 +132,19 @@ public class VideoDownloadListActivity extends AppCompatActivity implements View
 
         @Override
         public void onDownloadPause(VideoTaskItem item) {
-            LogUtils.w(TAG,"onDownloadPause: " + item.getUrl());
+            LogUtils.w(TAG, "onDownloadPause: " + item.getUrl());
             notifyChanged(item);
         }
 
         @Override
         public void onDownloadError(VideoTaskItem item) {
-            LogUtils.w(TAG,"onDownloadError: " + item.getUrl());
+            LogUtils.w(TAG, "onDownloadError: " + item.getUrl());
             notifyChanged(item);
         }
 
         @Override
         public void onDownloadSuccess(VideoTaskItem item) {
-            LogUtils.w(TAG,"onDownloadSuccess: " + item);
+            LogUtils.w(TAG, "onDownloadSuccess: " + item);
             notifyChanged(item);
         }
     };

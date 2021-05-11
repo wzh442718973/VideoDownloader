@@ -1,6 +1,7 @@
 package com.jeffmony.downloader;
 
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.jeffmony.downloader.listener.IVideoInfoListener;
 import com.jeffmony.downloader.listener.IVideoInfoParseListener;
@@ -44,6 +45,7 @@ public class VideoInfoParserManager {
     }
 
     private void doParseVideoInfoTask(VideoTaskItem taskItem, IVideoInfoListener listener, Map<String, String> headers) {
+        Log.e("wzh", "doParseVideoInfoTask: " + taskItem.getUrl());
         try {
             if (taskItem == null) {
                 listener.onBaseVideoInfoFailed(new VideoDownloadException(DownloadExceptionUtils.VIDEO_INFO_EMPTY));
@@ -67,9 +69,11 @@ public class VideoInfoParserManager {
                     }
                 }
             }
-
-            String finalUrl = taskItem.getUrl();
-            LogUtils.i(TAG, "doParseVideoInfoTask url="+finalUrl);
+            //wzh change
+//            String finalUrl = taskItem.getUrl();
+            String finalUrl = listener.calculateRealVideoUrl(taskItem.getUrl());
+            //wzh end
+            LogUtils.i(TAG, "doParseVideoInfoTask url=" + finalUrl);
 
             HttpURLConnection connection = null;
             // Redirect is enabled, send redirect request to get final location.
@@ -92,7 +96,7 @@ public class VideoInfoParserManager {
             }
             taskItem.setFinalUrl(finalUrl);
             String contentType = connection.getContentType();
-
+            Log.e("wzh", "finalUrl: " + finalUrl);
             if (finalUrl.contains(Video.TypeInfo.M3U8) || VideoDownloadUtils.isM3U8Mimetype(contentType)) {
                 //这是M3U8视频类型
                 taskItem.setMimeType(Video.TypeInfo.M3U8);
@@ -152,8 +156,9 @@ public class VideoInfoParserManager {
     }
 
     private void parseNetworkM3U8Info(VideoTaskItem taskItem, Map<String, String> headers, IVideoInfoListener listener) {
+        Log.e("wzh", "parseNetworkM3U8Info: " + taskItem.getFinalUrl());
         try {
-            M3U8 m3u8 = M3U8Utils.parseNetworkM3U8Info(taskItem.getUrl(), headers, 0);
+            M3U8 m3u8 = M3U8Utils.parseNetworkM3U8Info(taskItem.getFinalUrl(), headers, 0);
             // HLS LIVE video cannot be proxy cached.
             if (m3u8.hasEndList()) {
                 String saveName = VideoDownloadUtils.computeMD5(taskItem.getUrl());
@@ -198,7 +203,7 @@ public class VideoInfoParserManager {
             fos = new FileOutputStream(coverFile);
             int len;
             byte[] buf = new byte[VideoDownloadUtils.DEFAULT_BUFFER_SIZE];
-            while((len = inputStream.read(buf))!= -1) {
+            while ((len = inputStream.read(buf)) != -1) {
                 fos.write(buf, 0, len);
             }
         } catch (IOException e) {
