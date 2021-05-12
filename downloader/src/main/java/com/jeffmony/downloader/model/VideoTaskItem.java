@@ -272,7 +272,6 @@ public class VideoTaskItem implements Cloneable {
         mMimeType = null;
         mErrorCode = 0;
         mVideoType = Video.Type.DEFAULT;
-        mTaskState = VideoTaskState.DEFAULT;
         mM3U8 = null;
         mSpeed = 0.0f;
         mPercent = 0.0f;

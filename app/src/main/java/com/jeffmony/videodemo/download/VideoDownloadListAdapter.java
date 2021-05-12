@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -18,21 +19,40 @@ import com.jeffmony.videodemo.play.PlayerActivity;
 import com.jeffmony.videodemo.R;
 
 import java.io.File;
+import java.util.List;
 
-public class VideoDownloadListAdapter extends ArrayAdapter<VideoTaskItem> {
+public class VideoDownloadListAdapter extends BaseAdapter {
 
     private static final String TAG = "VideoListAdapter";
 
     private Context mContext;
+    private List<VideoTaskItem> mItems;
 
-    public VideoDownloadListAdapter(Context context, int resource, VideoTaskItem[] items) {
-        super(context, resource, items);
+    public VideoDownloadListAdapter(Context context, int resource, List<VideoTaskItem> items) {
+        super();
+        mItems = items;
         mContext = context;
     }
+
+    @Override
+    public int getCount() {
+        return mItems.size();
+    }
+
+    @Override
+    public VideoTaskItem getItem(int position) {
+        return mItems.get(position);
+    }
+
+    @Override
+    public long getItemId(int position) {
+        return position;
+    }
+
     @NonNull
     @Override
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-        View view = LayoutInflater.from(getContext()).inflate(R.layout.download_item, null);
+        View view = LayoutInflater.from(mContext).inflate(R.layout.download_item, null);
         VideoTaskItem item = getItem(position);
         TextView urlTextView = (TextView) view.findViewById(R.id.url_text);
         urlTextView.setText(item.getUrl());
@@ -63,6 +83,8 @@ public class VideoDownloadListAdapter extends ArrayAdapter<VideoTaskItem> {
                 stateView.setText("等待中");
                 break;
             case VideoTaskState.PREPARE:
+                stateView.setText("下载准备中...");
+                break;
             case VideoTaskState.START:
             case VideoTaskState.DOWNLOADING:
                 stateView.setText("下载中...");
@@ -90,7 +112,7 @@ public class VideoDownloadListAdapter extends ArrayAdapter<VideoTaskItem> {
     private void setDownloadInfoText(TextView infoView, VideoTaskItem item) {
         switch (item.getTaskState()) {
             case VideoTaskState.DOWNLOADING:
-                infoView.setText("进度:" + item.getPercentString() + ", 速度:" + item.getSpeedString() +", 已下载:" + item.getDownloadSizeString());
+                infoView.setText("进度:" + item.getPercentString() + ", 速度:" + item.getSpeedString() + ", 已下载:" + item.getDownloadSizeString());
                 break;
             case VideoTaskState.SUCCESS:
                 infoView.setText("进度:" + item.getPercentString());
@@ -103,10 +125,10 @@ public class VideoDownloadListAdapter extends ArrayAdapter<VideoTaskItem> {
         }
     }
 
-    public void notifyChanged(VideoTaskItem[] items, VideoTaskItem item) {
+    public void notifyChanged(List<VideoTaskItem> items, VideoTaskItem item) {
         for (int index = 0; index < getCount(); index++) {
             if (getItem(index).equals(item)) {
-                items[index] = item;
+                items.set(index, item);
                 notifyDataSetChanged();
             }
         }

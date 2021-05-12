@@ -5,9 +5,12 @@ import android.app.Application;
 import com.jeffmony.downloader.common.DownloadConstants;
 import com.jeffmony.downloader.VideoDownloadConfig;
 import com.jeffmony.downloader.VideoDownloadManager;
+import com.jeffmony.downloader.listener.IDownloadInitCallback;
+import com.jeffmony.downloader.model.VideoTaskItem;
 import com.jeffmony.downloader.utils.VideoStorageUtils;
 
 import java.io.File;
+import java.util.List;
 
 public class MyApplication extends Application {
 
@@ -25,6 +28,12 @@ public class MyApplication extends Application {
                 .setIgnoreCertErrors(false)
                 .setShouldM3U8Merged(false)
                 .buildConfig();
-        VideoDownloadManager.getInstance().initConfig(config);
+        VideoDownloadManager.getInstance().initConfig(config, new IDownloadInitCallback(){
+
+            @Override
+            public void onDownloadInfos(boolean success, String msg, List<VideoTaskItem> items) {
+
+            }
+        });
     }
 }

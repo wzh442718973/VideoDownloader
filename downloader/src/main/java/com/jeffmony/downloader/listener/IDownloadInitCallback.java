@@ -4,7 +4,7 @@ import com.jeffmony.downloader.model.VideoTaskItem;
 
 import java.util.List;
 
-public interface IDownloadInfosCallback {
+public interface IDownloadInitCallback {
 
-    void onDownloadInfos(List<VideoTaskItem> items);
+    void onDownloadInfos(boolean success, String msg, List<VideoTaskItem> items);
 }

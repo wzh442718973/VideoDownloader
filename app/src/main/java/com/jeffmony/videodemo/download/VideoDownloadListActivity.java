@@ -4,17 +4,20 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.jeffmony.downloader.VideoDownloadManager;
 import com.jeffmony.downloader.listener.DownloadListener;
-import com.jeffmony.downloader.listener.IDownloadInfosCallback;
+import com.jeffmony.downloader.listener.IDownloadInitCallback;
 import com.jeffmony.downloader.model.VideoTaskItem;
+import com.jeffmony.downloader.model.VideoTaskState;
 import com.jeffmony.downloader.utils.LogUtils;
 import com.jeffmony.videodemo.R;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class VideoDownloadListActivity extends AppCompatActivity implements View.OnClickListener {
@@ -26,7 +29,7 @@ public class VideoDownloadListActivity extends AppCompatActivity implements View
     private ListView mDownloadListView;
 
     private VideoDownloadListAdapter mAdapter;
-    private VideoTaskItem[] items = new VideoTaskItem[1];
+    private List<VideoTaskItem> items = new ArrayList<>();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -43,7 +46,7 @@ public class VideoDownloadListActivity extends AppCompatActivity implements View
 
     private void initDatas() {
 //        VideoTaskItem item1 = new VideoTaskItem("https://v3.dious.cc/20201224/v04Vp1ES/index.m3u8", "https://i.loli.net/2021/04/18/WuAUZc85meB6D2Q.jpg", "test1");
-        VideoTaskItem item1 = new VideoTaskItem("https://myflixer.to/watch-movie/david-byrnes-american-utopia-63834.3495477", null, "test1") ;
+        VideoTaskItem item1 = new VideoTaskItem("https://myflixer.to/watch-movie/david-byrnes-american-utopia-63834.3495477", null, "test1");
         VideoTaskItem item2 = new VideoTaskItem("https://v3.dious.cc/20201224/6Q1yAHRu/index.m3u8", "https://i.loli.net/2021/04/18/WuAUZc85meB6D2Q.jpg", "test2");
         VideoTaskItem item3 = new VideoTaskItem("https://v3.dious.cc/20201224/aQKzuq6G/index.m3u8", "https://i.loli.net/2021/04/18/WuAUZc85meB6D2Q.jpg", "test3");
         VideoTaskItem item4 = new VideoTaskItem("https://v3.dious.cc/20201224/WWTyUxS6/index.m3u8", "https://i.loli.net/2021/04/18/WuAUZc85meB6D2Q.jpg", "test3");
@@ -51,18 +54,22 @@ public class VideoDownloadListActivity extends AppCompatActivity implements View
         VideoTaskItem item6 = new VideoTaskItem("https://europe.olemovienews.com/hlstimeofffmp4/20210226/fICqcpqr/mp4/fICqcpqr.mp4/master.m3u8", "https://i.loli.net/2021/04/18/WuAUZc85meB6D2Q.jpg", "test5");
         VideoTaskItem item7 = new VideoTaskItem("https://rrsp-1252816746.cos.ap-shanghai.myqcloud.com/0c1f023caa3bbefbe16a5ce564142bbe.mp4", "https://i.loli.net/2021/04/18/WuAUZc85meB6D2Q.jpg", "test6");
 
-        items[0] = item1;
-//        items[1] = item2;
-//        items[2] = item3;
-//        items[3] = item4;
-//        items[4] = item5;
-//        items[5] = item6;
-//        items[6] = item7;
+        items.add(item1);
+        items.add(item2);
+        items.add(item3);
+        items.add(item4);
+        items.add(item5);
+        items.add(item6);
+        items.add(item7);
 
         mAdapter = new VideoDownloadListAdapter(this, R.layout.download_item, items);
         mDownloadListView.setAdapter(mAdapter);
 
-        VideoDownloadManager.getInstance().fetchDownloadItems(mInfosCallback);
+        List<VideoTaskItem> list = VideoDownloadManager.getInstance().getAllTaskItems();
+        items.addAll(list);
+        for (VideoTaskItem item : list) {
+            notifyChanged(item);
+        }
         VideoDownloadManager.getInstance().setGlobalRedirectListener(new VideoDownloadManager.OnRedirectListener() {
             @Override
             public String onRedirectUrl(String url) {
@@ -70,13 +77,22 @@ public class VideoDownloadListActivity extends AppCompatActivity implements View
             }
         });
         mDownloadListView.setOnItemClickListener((parent, view, position, id) -> {
-            VideoTaskItem item = items[position];
-            if (item.isInitialTask()) {
-                VideoDownloadManager.getInstance().startDownload(item);
-            } else if (item.isRunningTask()) {
-                VideoDownloadManager.getInstance().pauseDownloadTask(item.getUrl());
-            } else if (item.isInterruptTask()) {
-                VideoDownloadManager.getInstance().resumeDownload(item.getUrl());
+            VideoTaskItem item = items.get(position);
+            int state = item.getTaskState();
+            switch (state) {
+                case VideoTaskState.DEFAULT:
+                case VideoTaskState.PENDING:
+                case VideoTaskState.ERROR:
+                case VideoTaskState.PAUSE:
+                    VideoDownloadManager.getInstance().startDownload(item);
+                    break;
+                case VideoTaskState.SUCCESS:
+                    break;
+                case VideoTaskState.PREPARE:
+                case VideoTaskState.START:
+                case VideoTaskState.DOWNLOADING:
+                    VideoDownloadManager.getInstance().pauseDownloadTask(item.getUrl());
+                    break;
             }
         });
     }
@@ -158,17 +174,6 @@ public class VideoDownloadListActivity extends AppCompatActivity implements View
         });
     }
 
-    private IDownloadInfosCallback mInfosCallback =
-            new IDownloadInfosCallback() {
-                @Override
-                public void onDownloadInfos(List<VideoTaskItem> items) {
-                    for (VideoTaskItem item : items) {
-                        notifyChanged(item);
-                    }
-                }
-            };
-
-
     @Override
     public void onClick(View v) {
         if (v == mStartAllBtn) {
@@ -181,7 +186,6 @@ public class VideoDownloadListActivity extends AppCompatActivity implements View
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        VideoDownloadManager.getInstance().removeDownloadInfosCallback(mInfosCallback);
     }
 
 }

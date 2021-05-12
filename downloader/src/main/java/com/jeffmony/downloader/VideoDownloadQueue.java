@@ -4,7 +4,10 @@ import com.jeffmony.downloader.model.VideoTaskItem;
 import com.jeffmony.downloader.model.VideoTaskState;
 import com.jeffmony.downloader.utils.LogUtils;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -14,126 +17,162 @@ public class VideoDownloadQueue {
 
     private static final String TAG = "VideoDownloadQueue";
 
-    private CopyOnWriteArrayList<VideoTaskItem> mQueue;
+    private List<VideoTaskItem> mQueue;
+    private Map<String, VideoTaskItem> mTasks;
 
     public VideoDownloadQueue() {
-        mQueue = new CopyOnWriteArrayList<>();
+        mQueue = new ArrayList<>();
+        mTasks = new HashMap<>();
     }
 
     public List<VideoTaskItem> getDownloadList() {
-        return mQueue;
+        synchronized (this) {
+            return new ArrayList<>(mQueue);
+        }
+    }
+
+    public void clear() {
+        synchronized (this) {
+            mQueue.clear();
+            mTasks.clear();
+        }
+
+    }
+
+    public VideoTaskItem remove(String url) {
+        VideoTaskItem task = null;
+        synchronized (this) {
+            task = mTasks.remove(url);
+            if (task != null) {
+                mQueue.remove(task);
+            }
+        }
+        return task;
+    }
+
+    /**
+     * 用于从数据库读取恢复下载队列
+     * @param taskItem
+     */
+    void addTask(VideoTaskItem taskItem) {
+        synchronized (this) {
+            VideoTaskItem task = mTasks.get(taskItem.getUrl());
+            if (task == null) {
+                mTasks.put(taskItem.getUrl(), taskItem);
+                mQueue.add(taskItem);
+            }
+        }
     }
 
     //put it into queue
-    public void offer(VideoTaskItem taskItem) {
-        mQueue.add(taskItem);
+    public VideoTaskItem offer(VideoTaskItem taskItem) {
+        synchronized (this) {
+            VideoTaskItem task = mTasks.get(taskItem.getUrl());
+            if (task == null) {
+                task = (VideoTaskItem) taskItem.clone();
+                task.setPaused(false);
+//                task.setDownloadCreateTime(System.currentTimeMillis());
+
+                mTasks.put(taskItem.getUrl(), task);
+                mQueue.add(task);
+            }
+            return task;
+        }
     }
 
-    //Remove Queue head item,
-    //Return Next Queue head.
-    public VideoTaskItem poll() {
-        try {
-            if (mQueue.size() >= 2) {
-                mQueue.remove(0);
-                return mQueue.get(0);
-            } else if (mQueue.size() == 1) {
-                mQueue.remove(0);
-            }
-        } catch (Exception e) {
-            LogUtils.w(TAG, "DownloadQueue remove failed.");
-        }
-        return null;
-    }
-
-    public VideoTaskItem peek() {
-        try {
-            if (mQueue.size() >= 1) {
-                return mQueue.get(0);
-            }
-        } catch (Exception e) {
-            LogUtils.w(TAG, "DownloadQueue get failed.");
-        }
-        return null;
-    }
+//    //Remove Queue head item,
+//    //Return Next Queue head.
+//    public VideoTaskItem poll() {
+//        try {
+//            if (mQueue.size() >= 2) {
+//                mQueue.remove(0);
+//                return mQueue.get(0);
+//            } else if (mQueue.size() == 1) {
+//                mQueue.remove(0);
+//            }
+//        } catch (Exception e) {
+//            LogUtils.w(TAG, "DownloadQueue remove failed.");
+//        }
+//        return null;
+//    }
+//
+//    public VideoTaskItem peek() {
+//        try {
+//            if (mQueue.size() >= 1) {
+//                return mQueue.get(0);
+//            }
+//        } catch (Exception e) {
+//            LogUtils.w(TAG, "DownloadQueue get failed.");
+//        }
+//        return null;
+//    }
 
     public boolean remove(VideoTaskItem taskItem) {
-        if (contains(taskItem)) {
-            return mQueue.remove(taskItem);
-        }
+        remove(taskItem.getUrl());
         return false;
     }
 
     public boolean contains(VideoTaskItem taskItem) {
-        return mQueue.contains(taskItem);
+        synchronized (this) {
+            return mTasks.containsKey(taskItem.getUrl());
+        }
     }
 
     public VideoTaskItem getTaskItem(String url) {
-        try {
-            for (int index = 0; index < mQueue.size(); index++) {
-                VideoTaskItem taskItem = mQueue.get(index);
-                if (taskItem != null && taskItem.getUrl() != null &&
-                        taskItem.getUrl().equals(url)) {
-                    return taskItem;
-                }
-            }
-        } catch (Exception e) {
-            LogUtils.w(TAG, "DownloadQueue getTaskItem failed.");
+        synchronized (this) {
+            return mTasks.get(url);
         }
-        return null;
     }
 
     public boolean isEmpty() {
-        return size() == 0;
+        synchronized (this) {
+            return mTasks.isEmpty();
+        }
     }
 
     public int size() {
-        return mQueue.size();
+        synchronized (this) {
+            return mQueue.size();
+        }
     }
 
-    public boolean isHead(VideoTaskItem taskItem) {
-        if (taskItem == null)
-            return false;
-        return taskItem.equals(peek());
-    }
+//    public boolean isHead(VideoTaskItem taskItem) {
+//        if (taskItem == null)
+//            return false;
+//        return taskItem.equals(peek());
+//    }
 
     public int getDownloadingCount() {
-        int count = 0;
-        try {
-            for (int index = 0; index < mQueue.size(); index++) {
-                if (isTaskRunnig(mQueue.get(index))) {
+        synchronized (this) {
+            int count = 0;
+            for (VideoTaskItem task : mQueue) {
+                if (isTaskRunnig(task)) {
                     count++;
                 }
             }
-        } catch (Exception e) {
-            LogUtils.w(TAG, "DownloadQueue getDownloadingCount failed.");
+            return count;
         }
-        return count;
     }
 
     public int getPendingCount() {
-        int count = 0;
-        try {
-            for (int index = 0; index < mQueue.size(); index++) {
-                if (isTaskPending(mQueue.get(index))) {
+        synchronized (this) {
+            int count = 0;
+            for (VideoTaskItem task : mQueue) {
+                if (isTaskPending(task)) {
                     count++;
                 }
             }
-        } catch (Exception e) {
-            LogUtils.w(TAG, "DownloadQueue getDownloadingCount failed.");
+            return count;
         }
-        return count;
     }
 
     public VideoTaskItem peekPendingTask() {
-        try {
-            for (int index = 0; index < mQueue.size(); index++) {
-                VideoTaskItem taskItem = mQueue.get(index);
-                if (isTaskPending(taskItem)) {
-                    return taskItem;
+        synchronized (this) {
+            for (VideoTaskItem task : mQueue) {
+                if (isTaskPending(task)) {
+                    return task;
                 }
             }
-        } catch (Exception e) {
-            LogUtils.w(TAG, "DownloadQueue getDownloadingCount failed.");
         }
         return null;
     }
@@ -142,8 +181,7 @@ public class VideoDownloadQueue {
         if (taskItem == null)
             return false;
         int taskState = taskItem.getTaskState();
-        return taskState == VideoTaskState.PENDING ||
-                taskState == VideoTaskState.PREPARE;
+        return taskState == VideoTaskState.PENDING;
     }
 
     public boolean isTaskRunnig(VideoTaskItem taskItem) {
@@ -151,6 +189,7 @@ public class VideoDownloadQueue {
             return false;
         int taskState = taskItem.getTaskState();
         return taskState == VideoTaskState.START ||
+                taskState == VideoTaskState.PREPARE ||
                 taskState == VideoTaskState.DOWNLOADING;
     }
 }

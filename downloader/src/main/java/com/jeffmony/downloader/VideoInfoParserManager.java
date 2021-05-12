@@ -112,7 +112,7 @@ public class VideoInfoParserManager {
                 taskItem.setTotalSize(contentLength);
                 listener.onBaseVideoInfoSuccess(taskItem);
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             listener.onBaseVideoInfoFailed(e);
         }
     }
