@@ -73,7 +73,7 @@ public class VideoDownloadListActivity extends AppCompatActivity implements View
         VideoDownloadManager.getInstance().setGlobalRedirectListener(new VideoDownloadManager.OnRedirectListener() {
             @Override
             public String onRedirectUrl(String url) {
-                return "https://b-g-eu-1.betterstream.co:2222/v2-hls-playback/73355e1315b5fdc780d19651e8c99dfd4d92f06d3e8cfbd414d4a50c38344b5752620175885cb985dc87b388b7fdfe720d3c4efe11f3bfd6dde18ad470311e9121f605ea591800d83f8d0e0c2d2ef04e0fc437f46ca6b7837b16e0d8003db2fe11050c3834a040ca6c970d86394278ff16836958c5bcafb8e0bade1f4ef17f3f141565c921d9502095b456688dcbeaf6331f3fb27c6c64fefb31c8729541678e/720/index.m3u8";
+                return "https://dm-h.phncdn.com/hls/videos/202001/27/279877311/720P_4000K_279877311.mp4/master.m3u8?ttl=1620878651&l=0&ipa=38.111.114.115&hash=9b321b9fd1373a44c84e0f2076f26c44";
             }
         });
         mDownloadListView.setOnItemClickListener((parent, view, position, id) -> {
@@ -84,9 +84,8 @@ public class VideoDownloadListActivity extends AppCompatActivity implements View
                 case VideoTaskState.PENDING:
                 case VideoTaskState.ERROR:
                 case VideoTaskState.PAUSE:
-                    VideoDownloadManager.getInstance().startDownload(item);
-                    break;
                 case VideoTaskState.SUCCESS:
+                    VideoDownloadManager.getInstance().startDownload(item);
                     break;
                 case VideoTaskState.PREPARE:
                 case VideoTaskState.START:

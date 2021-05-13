@@ -1,5 +1,6 @@
 package com.jeffmony.downloader;
 
+import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -21,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 public class VideoInfoParserManager {
@@ -42,6 +44,15 @@ public class VideoInfoParserManager {
 
     public synchronized void parseVideoInfo(final VideoTaskItem taskItem, IVideoInfoListener listener, final Map<String, String> headers) {
         WorkerThreadHandler.submitRunnableTask(() -> doParseVideoInfoTask(taskItem, listener, headers));
+    }
+
+    private static boolean IsM3u8(String videoUrl){
+        final String path = Uri.parse(videoUrl).getPath();
+        if(path != null && path.toLowerCase(Locale.US).endsWith(".m3u8")){
+            return true;
+        }else{
+            return false;
+        }
     }
 
     private void doParseVideoInfoTask(VideoTaskItem taskItem, IVideoInfoListener listener, Map<String, String> headers) {
@@ -97,7 +108,7 @@ public class VideoInfoParserManager {
             taskItem.setFinalUrl(finalUrl);
             String contentType = connection.getContentType();
             Log.e("wzh", "finalUrl: " + finalUrl);
-            if (finalUrl.contains(Video.TypeInfo.M3U8) || VideoDownloadUtils.isM3U8Mimetype(contentType)) {
+            if (IsM3u8(finalUrl) || VideoDownloadUtils.isM3U8Mimetype(contentType)) {
                 //这是M3U8视频类型
                 taskItem.setMimeType(Video.TypeInfo.M3U8);
                 parseNetworkM3U8Info(taskItem, headers, listener);
