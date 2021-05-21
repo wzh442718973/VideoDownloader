@@ -242,9 +242,8 @@ public class VideoDownloadManager {
     }
 
     private void parseVideoDownloadInfo(VideoTaskItem taskItem, Map<String, String> headers) {
-        String videoUrl = taskItem.getUrl();
-        String saveName = VideoDownloadUtils.computeMD5(videoUrl);
-        taskItem.setFileHash(saveName);
+        final String videoUrl = taskItem.getUrl();
+        taskItem.setFileHash(VideoDownloadUtils.computeMD5(videoUrl));
         boolean taskExisted = taskItem.getDownloadCreateTime() != 0;
         if (taskExisted) {
             parseExistVideoDownloadInfo(taskItem, headers);
@@ -410,11 +409,7 @@ public class VideoDownloadManager {
                         taskItem.setDownloadSize(totalSize);
                         taskItem.setIsCompleted(true);
                         taskItem.setPercent(100f);
-                        if (taskItem.isHlsType()) {
-                            taskItem.setFileName(taskItem.getFileHash() + "_" + VideoDownloadUtils.LOCAL_M3U8);
-                        } else {
-                            taskItem.setFileName(taskItem.getFileHash() + VideoDownloadUtils.VIDEO_SUFFIX);
-                        }
+                        taskItem.setFileName(taskItem.makeFileName());
                         taskItem.setFilePath(taskItem.getSaveDir() + File.separator + taskItem.getFileName());
                         mVideoDownloadHandler.obtainMessage(DownloadConstants.MSG_DOWNLOAD_SUCCESS, taskItem).sendToTarget();
                     }
@@ -691,17 +686,18 @@ public class VideoDownloadManager {
         if (TextUtils.isEmpty(taskItem.getFileHash())) {
             taskItem.setFileHash(VideoDownloadUtils.computeMD5(taskItem.getUrl()));
         }
-        String outputPath = inputPath.substring(0, inputPath.lastIndexOf("/")) + File.separator + taskItem.getFileHash() + "_" + VideoDownloadUtils.OUPUT_VIDEO;
+        final String outName = taskItem.getTitle() + ".mp4";
+        final String outputPath = inputPath.substring(0, inputPath.lastIndexOf("/")) + File.separator + outName;
         File outputFile = new File(outputPath);
         if (outputFile.exists()) {
             outputFile.delete();
         }
-
+        LogUtils.i(TAG, "doMergeTs: " + inputPath + " > " + outputPath);
         VideoProcessManager.getInstance().mergeTs(inputPath, outputPath, new IM3U8MergeListener() {
             @Override
             public void onMergedFinished() {
                 LogUtils.i(TAG, "VideoMerge onMergedFinished outputPath=" + outputPath);
-                taskItem.setFileName(VideoDownloadUtils.OUPUT_VIDEO);
+                taskItem.setFileName(outName);
                 taskItem.setFilePath(outputPath);
                 taskItem.setMimeType(Video.Mime.MIME_TYPE_MP4);
                 taskItem.setVideoType(Video.Type.MP4_TYPE);
@@ -712,7 +708,7 @@ public class VideoDownloadManager {
                 File[] files = outputFile.getParentFile().listFiles();
                 for (File subFile : files) {
                     String subFilePath = subFile.getAbsolutePath();
-                    if (!subFilePath.endsWith(VideoDownloadUtils.OUPUT_VIDEO)) {
+                    if (!subFilePath.endsWith(outName)) {
                         subFile.delete();
                     }
                 }

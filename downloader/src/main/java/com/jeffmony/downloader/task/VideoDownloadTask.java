@@ -31,8 +31,8 @@ public abstract class VideoDownloadTask {
         mTaskItem = taskItem;
         mHeaders = headers;
         mFinalUrl = taskItem.getFinalUrl();
-        mSaveName = VideoDownloadUtils.computeMD5(taskItem.getUrl());
-        mSaveDir = new File(VideoDownloadUtils.getDownloadConfig().getCacheRoot(), mSaveName);
+        mSaveName = taskItem.makeFileName();//VideoDownloadUtils.computeMD5(taskItem.getUrl());
+        mSaveDir = new File(VideoDownloadUtils.getDownloadConfig().getCacheRoot(), taskItem.getFileHash());
         if (!mSaveDir.exists()) {
             mSaveDir.mkdir();
         }

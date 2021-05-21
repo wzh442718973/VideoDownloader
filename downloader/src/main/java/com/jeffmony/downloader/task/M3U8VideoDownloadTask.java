@@ -28,6 +28,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class M3U8VideoDownloadTask extends VideoDownloadTask {
 
@@ -147,6 +148,8 @@ public class M3U8VideoDownloadTask extends VideoDownloadTask {
         }
     }
 
+    private final AtomicBoolean lastStatus = new AtomicBoolean(false);
+
     private void notifyDownloadProgress() {
         updateM3U8TsInfo();
         if (mCurrentCachedSize == 0) {
@@ -174,6 +177,7 @@ public class M3U8VideoDownloadTask extends VideoDownloadTask {
             mLastCachedSize = mCurrentCachedSize;
             mLastInvokeTime = nowTime;
         }
+
         boolean isCompleted = true;
         for (M3U8Seg ts : mTsList) {
             File tsFile = new File(mSaveDir, ts.getIndexName());
@@ -182,15 +186,18 @@ public class M3U8VideoDownloadTask extends VideoDownloadTask {
                 break;
             }
         }
+
         if (isCompleted) {
-            try {
-                createLocalM3U8File();
-            } catch (Exception e) {
-                notifyDownloadError(e);
+            if(!lastStatus.getAndSet(true)){
+                try {
+                    createLocalM3U8File();
+                } catch (Exception e) {
+                    notifyDownloadError(e);
+                }
+                mTotalSize = mCurrentCachedSize;
+                mDownloadTaskListener.onTaskProgressForM3U8(100.0f, mCurrentCachedSize, mCurTs, mTotalTs, mSpeed);
+                mDownloadTaskListener.onTaskFinished(mTotalSize);
             }
-            mTotalSize = mCurrentCachedSize;
-            mDownloadTaskListener.onTaskProgressForM3U8(100.0f, mCurrentCachedSize, mCurTs, mTotalTs, mSpeed);
-            mDownloadTaskListener.onTaskFinished(mTotalSize);
         }
     }
 
@@ -275,7 +282,7 @@ public class M3U8VideoDownloadTask extends VideoDownloadTask {
                     }
                 }
             } else {
-                LogUtils.w(TAG, "downloadFile failed, exception="+e.getMessage());
+                LogUtils.w(TAG, "downloadFile failed, exception=" + e.getMessage());
                 throw e;
             }
         } finally {
@@ -292,7 +299,7 @@ public class M3U8VideoDownloadTask extends VideoDownloadTask {
             int len;
             byte[] buf = new byte[BUFFER_SIZE];
             while ((len = inputStream.read(buf)) != -1) {
-                totalLength += (long)len;
+                totalLength += (long) len;
                 fos.write(buf, 0, len);
             }
             if (contentLength > 0 && contentLength == totalLength) {
@@ -357,7 +364,7 @@ public class M3U8VideoDownloadTask extends VideoDownloadTask {
                     if (m3u8Ts.getSegmentByteRange() != null) {
                         initSegmentInfo = "URI=\"" + initSegmentFilePath + "\"" + ",BYTERANGE=\"" + m3u8Ts.getSegmentByteRange() + "\"";
                     } else {
-                        initSegmentInfo = "URI=\"" + initSegmentFilePath  + "\"";
+                        initSegmentInfo = "URI=\"" + initSegmentFilePath + "\"";
                     }
                     bfw.write(M3U8Constants.TAG_INIT_SEGMENT + ":" + initSegmentInfo + "\n");
                 }
@@ -389,7 +396,7 @@ public class M3U8VideoDownloadTask extends VideoDownloadTask {
             bfw.flush();
             bfw.close();
 
-            File localM3U8File = new File(mSaveDir, mSaveName + "_" + VideoDownloadUtils.LOCAL_M3U8);
+            File localM3U8File = new File(mSaveDir, mSaveName);// + "_" + VideoDownloadUtils.LOCAL_M3U8);
             if (localM3U8File.exists()) {
                 localM3U8File.delete();
             }

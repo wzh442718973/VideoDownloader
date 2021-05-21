@@ -52,7 +52,7 @@ public class BaseVideoDownloadTask extends VideoDownloadTask {
         mDownloadExecutor.execute(() -> {
             File videoFile;
             try {
-                videoFile = new File(mSaveDir, mSaveName + VideoDownloadUtils.VIDEO_SUFFIX);
+                videoFile = new File(mSaveDir, mSaveName);// + VideoDownloadUtils.VIDEO_SUFFIX);
                 if (!videoFile.exists()) {
                     videoFile.createNewFile();
                     mCurrentCachedSize = 0;

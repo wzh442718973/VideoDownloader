@@ -46,17 +46,29 @@ public class VideoTaskItem implements Cloneable {
         return mUrl;
     }
 
-    public void setCoverUrl(String coverUrl) { mCoverUrl = coverUrl; }
+    public void setCoverUrl(String coverUrl) {
+        mCoverUrl = coverUrl;
+    }
 
-    public String getCoverUrl() { return mCoverUrl; }
+    public String getCoverUrl() {
+        return mCoverUrl;
+    }
 
-    public void setCoverPath(String coverPath) { mCoverPath = coverPath; }
+    public void setCoverPath(String coverPath) {
+        mCoverPath = coverPath;
+    }
 
-    public String getCoverPath() { return mCoverPath; }
+    public String getCoverPath() {
+        return mCoverPath;
+    }
 
-    public void setTitle(String title) { mTitle = title; }
+    public void setTitle(String title) {
+        mTitle = title;
+    }
 
-    public String getTitle() { return mTitle; }
+    public String getTitle() {
+        return mTitle;
+    }
 
     public void setDownloadCreateTime(long time) {
         mDownloadCreateTime = time;
@@ -224,6 +236,14 @@ public class VideoTaskItem implements Cloneable {
 
     public void setFilePath(String path) {
         mFilePath = path;
+    }
+
+    public String makeFileName() {
+        if (isHlsType()) {
+            return "index.m3u8";//getTitle() + "_" + VideoDownloadUtils.LOCAL_M3U8;
+        } else {
+            return getTitle() + VideoDownloadUtils.VIDEO_SUFFIX;
+        }
     }
 
     public String getFilePath() {
