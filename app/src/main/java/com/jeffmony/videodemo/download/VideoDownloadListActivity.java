@@ -81,14 +81,11 @@ public class VideoDownloadListActivity extends AppCompatActivity implements View
             int state = item.getTaskState();
             switch (state) {
                 case VideoTaskState.DEFAULT:
-                case VideoTaskState.PENDING:
                 case VideoTaskState.ERROR:
                 case VideoTaskState.PAUSE:
                 case VideoTaskState.SUCCESS:
                     VideoDownloadManager.getInstance().startDownload(item);
                     break;
-                case VideoTaskState.PREPARE:
-                case VideoTaskState.START:
                 case VideoTaskState.DOWNLOADING:
                     VideoDownloadManager.getInstance().pauseDownloadTask(item.getUrl());
                     break;
@@ -103,20 +100,8 @@ public class VideoDownloadListActivity extends AppCompatActivity implements View
     private DownloadListener mListener = new DownloadListener() {
 
         @Override
-        public void onDownloadDefault(VideoTaskItem item) {
-            LogUtils.w(TAG, "onDownloadDefault: " + item);
-            notifyChanged(item);
-        }
-
-        @Override
         public void onDownloadPending(VideoTaskItem item) {
             LogUtils.w(TAG, "onDownloadPending: " + item);
-            notifyChanged(item);
-        }
-
-        @Override
-        public void onDownloadPrepare(VideoTaskItem item) {
-            LogUtils.w(TAG, "onDownloadPrepare: " + item);
             notifyChanged(item);
         }
 

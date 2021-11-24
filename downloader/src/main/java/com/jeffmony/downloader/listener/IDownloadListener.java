@@ -4,11 +4,8 @@ import com.jeffmony.downloader.model.VideoTaskItem;
 
 public interface IDownloadListener {
 
-    void onDownloadDefault(VideoTaskItem item);
-
+    //下载等待
     void onDownloadPending(VideoTaskItem item);
-
-    void onDownloadPrepare(VideoTaskItem item);
 
     void onDownloadStart(VideoTaskItem item);
 

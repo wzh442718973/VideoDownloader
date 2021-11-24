@@ -70,7 +70,7 @@ public class VideoDownloadQueue {
             VideoTaskItem task = mTasks.get(taskItem.getUrl());
             if (task == null) {
                 task = (VideoTaskItem) taskItem.clone();
-                task.setPaused(false);
+                task.setTaskState(VideoTaskState.DEFAULT);
 //                task.setDownloadCreateTime(System.currentTimeMillis());
 
                 mTasks.put(taskItem.getUrl(), task);
@@ -181,15 +181,13 @@ public class VideoDownloadQueue {
         if (taskItem == null)
             return false;
         int taskState = taskItem.getTaskState();
-        return taskState == VideoTaskState.PENDING;
+        return taskState == VideoTaskState.DEFAULT;
     }
 
     public boolean isTaskRunnig(VideoTaskItem taskItem) {
         if (taskItem == null)
             return false;
         int taskState = taskItem.getTaskState();
-        return taskState == VideoTaskState.START ||
-                taskState == VideoTaskState.PREPARE ||
-                taskState == VideoTaskState.DOWNLOADING;
+        return taskState == VideoTaskState.DOWNLOADING;
     }
 }

@@ -5,17 +5,7 @@ import com.jeffmony.downloader.model.VideoTaskItem;
 public class DownloadListener implements IDownloadListener {
 
     @Override
-    public void onDownloadDefault(VideoTaskItem item) {
-
-    }
-
-    @Override
     public void onDownloadPending(VideoTaskItem item) {
-
-    }
-
-    @Override
-    public void onDownloadPrepare(VideoTaskItem item) {
 
     }
 

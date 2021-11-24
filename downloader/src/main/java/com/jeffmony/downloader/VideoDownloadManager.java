@@ -222,20 +222,18 @@ public class VideoDownloadManager {
             case VideoTaskState.SUCCESS:
                 mVideoDownloadHandler.obtainMessage(DownloadConstants.MSG_DOWNLOAD_SUCCESS, taskItem).sendToTarget();
                 break;
-            case VideoTaskState.PREPARE:
-            case VideoTaskState.START:
             case VideoTaskState.DOWNLOADING:
                 //下载中,不做处理
                 break;
             default:
                 int downloadingCount = mVideoDownloadQueue.getDownloadingCount();
                 if (downloadingCount < mConfig.getConcurrentCount()) {
-                    taskItem.setTaskState(VideoTaskState.PREPARE);
-                    mVideoDownloadHandler.obtainMessage(DownloadConstants.MSG_DOWNLOAD_PREPARE, taskItem).sendToTarget();
+                    taskItem.setTaskState(VideoTaskState.DOWNLOADING); //排队状态
+                    mVideoDownloadHandler.obtainMessage(DownloadConstants.MSG_DOWNLOAD_START, taskItem).sendToTarget();
                     parseVideoDownloadInfo(taskItem, headers);
                 } else {
-                    taskItem.setTaskState(VideoTaskState.PENDING);
-                    mVideoDownloadHandler.obtainMessage(DownloadConstants.MSG_DOWNLOAD_PENDING, taskItem).sendToTarget();
+                    taskItem.setTaskState(VideoTaskState.DEFAULT);//排队状态
+                    mVideoDownloadHandler.obtainMessage(DownloadConstants.MSG_DOWNLOAD_DEFAULT, taskItem).sendToTarget();
                 }
                 break;
         }
@@ -331,10 +329,10 @@ public class VideoDownloadManager {
     }
 
     private void startM3U8VideoDownloadTask(final VideoTaskItem taskItem, M3U8 m3u8, Map<String, String> headers) {
-        taskItem.setTaskState(VideoTaskState.PREPARE);
+//        taskItem.setTaskState(VideoTaskState.PREPARE);
 //        mVideoItemTaskMap.put(taskItem.getUrl(), taskItem);
         VideoTaskItem tempTaskItem = (VideoTaskItem) taskItem.clone();
-        mVideoDownloadHandler.obtainMessage(DownloadConstants.MSG_DOWNLOAD_PREPARE, tempTaskItem).sendToTarget();
+        mVideoDownloadHandler.obtainMessage(DownloadConstants.MSG_DOWNLOAD_PROCESSING, tempTaskItem).sendToTarget();
 
         VideoDownloadTask downloadTask = mVideoDownloadTaskMap.get(taskItem.getUrl());
         if (downloadTask == null) {
@@ -345,10 +343,10 @@ public class VideoDownloadManager {
     }
 
     private void startBaseVideoDownloadTask(VideoTaskItem taskItem, Map<String, String> headers) {
-        taskItem.setTaskState(VideoTaskState.PREPARE);
+//        taskItem.setTaskState(VideoTaskState.PREPARE);
 //        mVideoItemTaskMap.put(taskItem.getUrl(), taskItem);
         VideoTaskItem tempTaskItem = (VideoTaskItem) taskItem.clone();
-        mVideoDownloadHandler.obtainMessage(DownloadConstants.MSG_DOWNLOAD_PREPARE, tempTaskItem).sendToTarget();
+        mVideoDownloadHandler.obtainMessage(DownloadConstants.MSG_DOWNLOAD_PROCESSING, tempTaskItem).sendToTarget();
 
         VideoDownloadTask downloadTask = mVideoDownloadTaskMap.get(taskItem.getUrl());
         if (downloadTask == null) {
@@ -363,7 +361,7 @@ public class VideoDownloadManager {
             downloadTask.setDownloadTaskListener(new IDownloadTaskListener() {
                 @Override
                 public void onTaskStart(String url) {
-                    taskItem.setTaskState(VideoTaskState.START);
+                    taskItem.setTaskState(VideoTaskState.DOWNLOADING);
                     mVideoDownloadHandler.obtainMessage(DownloadConstants.MSG_DOWNLOAD_START, taskItem).sendToTarget();
                 }
 
@@ -396,7 +394,6 @@ public class VideoDownloadManager {
                 public void onTaskPaused() {
                     if (!taskItem.isErrorState() || !taskItem.isSuccessState()) {
                         taskItem.setTaskState(VideoTaskState.PAUSE);
-                        taskItem.setPaused(true);
                         mVideoDownloadHandler.obtainMessage(DownloadConstants.MSG_DOWNLOAD_PAUSE, taskItem).sendToTarget();
                         mVideoDownloadHandler.removeMessages(DownloadConstants.MSG_DOWNLOAD_PROCESSING);
                     }
@@ -453,9 +450,7 @@ public class VideoDownloadManager {
         synchronized (mQueueLock) {
             List<VideoTaskItem> taskList = mVideoDownloadQueue.getDownloadList();
             for (VideoTaskItem taskItem : taskList) {
-                if (taskItem.isPendingTask()) {
-                    mVideoDownloadHandler.obtainMessage(DownloadConstants.MSG_DOWNLOAD_DEFAULT, taskItem).sendToTarget();
-                } else if (taskItem.isRunningTask()) {
+                 if (taskItem.isRunningTask()) {
                     pauseDownloadTask(taskItem);
                 }
             }
@@ -481,6 +476,9 @@ public class VideoDownloadManager {
         VideoDownloadTask task = mVideoDownloadTaskMap.remove(url);
         if (task != null) {
             task.pauseDownload();
+        }else{
+            taskItem.setTaskState(VideoTaskState.PAUSE);
+            mVideoDownloadHandler.obtainMessage(DownloadConstants.MSG_DOWNLOAD_PAUSE, taskItem).sendToTarget();
         }
     }
 
@@ -604,12 +602,6 @@ public class VideoDownloadManager {
                 case DownloadConstants.MSG_DOWNLOAD_DEFAULT:
                     handleOnDownloadDefault(taskItem);
                     break;
-                case DownloadConstants.MSG_DOWNLOAD_PENDING:
-                    handleOnDownloadPending(taskItem);
-                    break;
-                case DownloadConstants.MSG_DOWNLOAD_PREPARE:
-                    handleOnDownloadPrepare(taskItem);
-                    break;
                 case DownloadConstants.MSG_DOWNLOAD_START:
                     handleOnDownloadStart(taskItem);
                     break;
@@ -630,16 +622,7 @@ public class VideoDownloadManager {
     }
 
     private void handleOnDownloadDefault(VideoTaskItem taskItem) {
-        mGlobalDownloadListener.onDownloadDefault(taskItem);
-    }
-
-    private void handleOnDownloadPending(VideoTaskItem taskItem) {
         mGlobalDownloadListener.onDownloadPending(taskItem);
-    }
-
-    private void handleOnDownloadPrepare(VideoTaskItem taskItem) {
-        mGlobalDownloadListener.onDownloadPrepare(taskItem);
-//        markDownloadInfoAddEvent(taskItem);
     }
 
     private void handleOnDownloadStart(VideoTaskItem taskItem) {

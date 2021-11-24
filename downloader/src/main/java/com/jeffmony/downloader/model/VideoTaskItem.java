@@ -30,7 +30,6 @@ public class VideoTaskItem implements Cloneable {
     private long mLastUpdateTime;        //上一次更新数据库的时间
     private String mFileName;            //文件名
     private String mFilePath;            //文件完整路径(包括文件名)
-    private boolean mPaused;
 
     public VideoTaskItem(String url) {
         this(url, "", "");
@@ -250,20 +249,16 @@ public class VideoTaskItem implements Cloneable {
         return mFilePath;
     }
 
-    public void setPaused(boolean paused) {
-        mPaused = paused;
-    }
-
     public boolean isPaused() {
-        return mPaused;
+        return mTaskState == VideoTaskState.PAUSE;
     }
 
-    public boolean isRunningTask() {
+    public boolean isRunningTask() {//是否下载中
         return mTaskState == VideoTaskState.DOWNLOADING;
     }
 
-    public boolean isPendingTask() {
-        return mTaskState == VideoTaskState.PENDING;
+    public boolean isPendingTask() { //是否排队等待中
+        return mTaskState == VideoTaskState.DEFAULT;
     }
 
     public boolean isErrorState() {
