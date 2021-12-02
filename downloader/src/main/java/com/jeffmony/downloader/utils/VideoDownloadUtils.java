@@ -153,7 +153,7 @@ public class VideoDownloadUtils {
     }
 
     public static String getPercent(float percent) {
-        DecimalFormat format = new DecimalFormat("###.00");
+        DecimalFormat format = new DecimalFormat("0.00");
         return format.format(percent) + "%";
     }
 
