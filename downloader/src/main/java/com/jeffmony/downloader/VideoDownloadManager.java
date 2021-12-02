@@ -669,7 +669,8 @@ public class VideoDownloadManager {
         if (TextUtils.isEmpty(taskItem.getFileHash())) {
             taskItem.setFileHash(VideoDownloadUtils.computeMD5(taskItem.getUrl()));
         }
-        final String outName = taskItem.getTitle() + ".mp4";
+//        final String outName = taskItem.getTitle() + ".mp4";
+        final String outName = "video.mp4"; //输出名称可能导致无法播放，固定死
         final String outputPath = inputPath.substring(0, inputPath.lastIndexOf("/")) + File.separator + outName;
         File outputFile = new File(outputPath);
         if (outputFile.exists()) {

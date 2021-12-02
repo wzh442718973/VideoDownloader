@@ -241,7 +241,8 @@ public class VideoTaskItem implements Cloneable {
         if (isHlsType()) {
             return "index.m3u8";//getTitle() + "_" + VideoDownloadUtils.LOCAL_M3U8;
         } else {
-            return getTitle() + VideoDownloadUtils.VIDEO_SUFFIX;
+//            return getTitle() + VideoDownloadUtils.VIDEO_SUFFIX;
+            return "video" + VideoDownloadUtils.VIDEO_SUFFIX;//文件名固定
         }
     }
 
