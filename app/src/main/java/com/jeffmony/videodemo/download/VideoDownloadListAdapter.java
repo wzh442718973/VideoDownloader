@@ -89,6 +89,12 @@ public class VideoDownloadListAdapter extends BaseAdapter {
                 playBtn.setVisibility(View.INVISIBLE);
                 stateView.setText("下载暂停, 已下载=" + item.getDownloadSizeString());
                 break;
+            case VideoTaskState.DOWN_SUCCESS:
+                stateView.setText("文件下载完成，准备合并...");
+                break;
+            case VideoTaskState.MERGE_ERROR:
+                stateView.setText("合并失败");
+                break;
             case VideoTaskState.SUCCESS:
                 playBtn.setVisibility(View.VISIBLE);
                 stateView.setText("下载完成, 总大小=" + item.getDownloadSizeString());

@@ -220,6 +220,7 @@ public class VideoDownloadManager {
         int state = taskItem.getTaskState();
         switch (state) {
             case VideoTaskState.SUCCESS:
+            case VideoTaskState.DOWN_SUCCESS:
                 mVideoDownloadHandler.obtainMessage(DownloadConstants.MSG_DOWNLOAD_SUCCESS, taskItem).sendToTarget();
                 break;
             case VideoTaskState.DOWNLOADING:
@@ -401,8 +402,9 @@ public class VideoDownloadManager {
 
                 @Override
                 public void onTaskFinished(long totalSize) {
-                    if (taskItem.getTaskState() != VideoTaskState.SUCCESS) {
-                        taskItem.setTaskState(VideoTaskState.SUCCESS);
+                    if (taskItem.getTaskState() != VideoTaskState.DOWN_SUCCESS ||
+                            taskItem.getTaskState() != VideoTaskState.SUCCESS) {
+                        taskItem.setTaskState(VideoTaskState.DOWN_SUCCESS);
                         taskItem.setDownloadSize(totalSize);
                         taskItem.setIsCompleted(true);
                         taskItem.setPercent(100f);
@@ -649,11 +651,15 @@ public class VideoDownloadManager {
 
         LogUtils.i(TAG, "handleOnDownloadSuccess shouldM3U8Merged=" + mConfig.shouldM3U8Merged() + ", isHlsType=" + taskItem.isHlsType());
         if (mConfig.shouldM3U8Merged() && taskItem.isHlsType()) {
+            mGlobalDownloadListener.onDownloadSuccess(taskItem); //在合并前通知进度为下载完成
+            markDownloadProgressInfoUpdateEvent(taskItem);
+
             doMergeTs(taskItem, taskItem1 -> {
                 mGlobalDownloadListener.onDownloadSuccess(taskItem1);
                 markDownloadFinishEvent(taskItem1);
             });
         } else {
+            taskItem.setTaskState(VideoTaskState.SUCCESS);
             mGlobalDownloadListener.onDownloadSuccess(taskItem);
             markDownloadFinishEvent(taskItem);
         }
@@ -685,6 +691,7 @@ public class VideoDownloadManager {
                 taskItem.setFilePath(outputPath);
                 taskItem.setMimeType(Video.Mime.MIME_TYPE_MP4);
                 taskItem.setVideoType(Video.Type.MP4_TYPE);
+                taskItem.setTaskState(VideoTaskState.SUCCESS);
                 listener.onCallback(taskItem);
 
                 //delete source file
@@ -705,7 +712,7 @@ public class VideoDownloadManager {
                 if (outputFile.exists()) {
                     outputFile.delete();
                 }
-
+                taskItem.setTaskState(VideoTaskState.MERGE_ERROR);
                 listener.onCallback(taskItem);
             }
         });

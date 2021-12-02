@@ -1,6 +1,7 @@
 package com.jeffmony.videodemo.download;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ListView;
@@ -73,7 +74,9 @@ public class VideoDownloadListActivity extends AppCompatActivity implements View
         VideoDownloadManager.getInstance().setGlobalRedirectListener(new VideoDownloadManager.OnRedirectListener() {
             @Override
             public String onRedirectUrl(String url) {
+                Log.e("wzh", "onRedirectUrl: " + url);
                 return "https://dm-h.phncdn.com/hls/videos/202001/27/279877311/720P_4000K_279877311.mp4/master.m3u8?ttl=1620878651&l=0&ipa=38.111.114.115&hash=9b321b9fd1373a44c84e0f2076f26c44";
+//                return "https://b-g-eu-11.betterstream.co:2222/v2-hls-playback/a5806e185879512778a71a0b50e697f74f5c89ec9197fe0b365d15d23b4064d942260ae7210ffa63f76a7c42c9163aa84468a2bced1ec05db1cf86402f6789ba73e0a8e502dd9d6683c5e0c5b56ebecea50dd64060f46ce4ebef3ae40c33f1725558132f06118a5e9f5b770b9f383aa19f9fa012c8a4a051c882a0684c2edbe1180117e2a8308ef7b87bb60ae6c5fec6f8c2838de4ceaf65f2616cc814eb65b8d44f6836fe687f7fcc65c6e9bcae79e7/playlist.m3u8";
             }
         });
         mDownloadListView.setOnItemClickListener((parent, view, position, id) -> {
