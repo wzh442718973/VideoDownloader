@@ -4,12 +4,12 @@ import android.util.Log;
 
 public class LogUtils {
 
-    private static final int LOG_DEBUG = 2;
-    private static final int LOG_INFO = 3;
-    private static final int LOG_WARN = 4;
-    private static final int LOG_ERROR = 5;
+    public static final int LOG_DEBUG = 2;
+    public static final int LOG_INFO = 3;
+    public static final int LOG_WARN = 4;
+    public static final int LOG_ERROR = 5;
 
-    private static int sLogLevel = LOG_INFO;
+    private static int sLogLevel = LOG_ERROR;
 
     public static void setLogLevel(int level) {
         sLogLevel = level;

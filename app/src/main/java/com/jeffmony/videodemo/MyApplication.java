@@ -1,5 +1,7 @@
 package com.jeffmony.videodemo;
 
+import static com.jeffmony.downloader.utils.LogUtils.LOG_DEBUG;
+
 import android.app.Application;
 
 import com.jeffmony.downloader.common.DownloadConstants;
@@ -7,6 +9,7 @@ import com.jeffmony.downloader.VideoDownloadConfig;
 import com.jeffmony.downloader.VideoDownloadManager;
 import com.jeffmony.downloader.listener.IDownloadInitCallback;
 import com.jeffmony.downloader.model.VideoTaskItem;
+import com.jeffmony.downloader.utils.LogUtils;
 import com.jeffmony.downloader.utils.VideoStorageUtils;
 
 import java.io.File;
@@ -17,6 +20,7 @@ public class MyApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        LogUtils.setLogLevel(LOG_DEBUG);
         File file = VideoStorageUtils.getVideoCacheDir(this);
         if (!file.exists()) {
             file.mkdir();
