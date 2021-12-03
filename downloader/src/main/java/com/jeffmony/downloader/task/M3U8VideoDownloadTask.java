@@ -188,7 +188,7 @@ public class M3U8VideoDownloadTask extends VideoDownloadTask {
         }
 
         if (isCompleted) {
-            if(!lastStatus.getAndSet(true)){
+            if (!lastStatus.getAndSet(true)) {
                 try {
                     createLocalM3U8File();
                 } catch (Exception e) {
@@ -301,6 +301,12 @@ public class M3U8VideoDownloadTask extends VideoDownloadTask {
             while ((len = inputStream.read(buf)) != -1) {
                 totalLength += (long) len;
                 fos.write(buf, 0, len);
+
+                try {
+                    Thread.sleep(20);
+                } catch (Throwable e) {
+
+                }
             }
             if (contentLength > 0 && contentLength == totalLength) {
                 ts.setContentLength(contentLength);
