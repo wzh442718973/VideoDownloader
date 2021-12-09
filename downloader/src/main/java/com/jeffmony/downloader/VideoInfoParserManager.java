@@ -56,7 +56,7 @@ public class VideoInfoParserManager {
     }
 
     private void doParseVideoInfoTask(VideoTaskItem taskItem, IVideoInfoListener listener, Map<String, String> headers) {
-        Log.e("wzh", "doParseVideoInfoTask: " + taskItem.getUrl());
+        LogUtils.e("wzh", "doParseVideoInfoTask: " + taskItem.getUrl());
         try {
             if (taskItem == null) {
                 listener.onBaseVideoInfoFailed(new VideoDownloadException(DownloadExceptionUtils.VIDEO_INFO_EMPTY));
@@ -107,7 +107,7 @@ public class VideoInfoParserManager {
             }
             taskItem.setFinalUrl(finalUrl);
             String contentType = connection.getContentType();
-            Log.e("wzh", "finalUrl: " + finalUrl);
+            LogUtils.e("wzh", "finalUrl: " + finalUrl);
             if (IsM3u8(finalUrl) || VideoDownloadUtils.isM3U8Mimetype(contentType)) {
                 //这是M3U8视频类型
                 taskItem.setMimeType(Video.TypeInfo.M3U8);
@@ -167,7 +167,7 @@ public class VideoInfoParserManager {
     }
 
     private void parseNetworkM3U8Info(VideoTaskItem taskItem, Map<String, String> headers, IVideoInfoListener listener) {
-        Log.e("wzh", "parseNetworkM3U8Info: " + taskItem.getFinalUrl());
+        LogUtils.e("wzh", "parseNetworkM3U8Info: " + taskItem.getFinalUrl());
         try {
             M3U8 m3u8 = M3U8Utils.parseNetworkM3U8Info(taskItem.getFinalUrl(), headers, 0);
             // HLS LIVE video cannot be proxy cached.

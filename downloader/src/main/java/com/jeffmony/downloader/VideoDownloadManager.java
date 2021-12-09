@@ -44,7 +44,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class VideoDownloadManager {
     private static final String TAG = "VideoDownloadManager";
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
 
     private static volatile VideoDownloadManager sInstance = null;
     private DownloadListener mGlobalDownloadListener = null;
@@ -273,19 +273,19 @@ public class VideoDownloadManager {
         VideoInfoParserManager.getInstance().parseVideoInfo(taskItem, new IVideoInfoListener() {
             @Override
             public void onFinalUrl(String finalUrl) {
-               if(DEBUG) Log.e("wzh", "onFinalUrl: " + finalUrl);
+                if (DEBUG) Log.e("wzh", "onFinalUrl: " + finalUrl);
             }
 
             @Override
             public void onBaseVideoInfoSuccess(VideoTaskItem taskItem) {
-                if(DEBUG) Log.e("wzh", "onBaseVideoInfoSuccess: " + taskItem);
+                if (DEBUG) Log.e("wzh", "onBaseVideoInfoSuccess: " + taskItem);
                 startBaseVideoDownloadTask(taskItem, headers);
             }
 
             @Override
             public void onBaseVideoInfoFailed(Throwable error) {
                 LogUtils.w(TAG, "onInfoFailed error=" + error);
-                if(DEBUG) Log.e("wzh", "onBaseVideoInfoFailed: ", error);
+                if (DEBUG) Log.e("wzh", "onBaseVideoInfoFailed: ", error);
                 int errorCode = DownloadExceptionUtils.getErrorCode(error);
                 taskItem.setErrorCode(errorCode);
                 taskItem.setTaskState(VideoTaskState.ERROR);
@@ -294,14 +294,14 @@ public class VideoDownloadManager {
 
             @Override
             public void onM3U8InfoSuccess(VideoTaskItem info, M3U8 m3u8) {
-                if(DEBUG)Log.e("wzh", "onM3U8InfoSuccess: " + info);
+                if (DEBUG) Log.e("wzh", "onM3U8InfoSuccess: " + info);
                 taskItem.setMimeType(info.getMimeType());
                 startM3U8VideoDownloadTask(taskItem, m3u8, headers);
             }
 
             @Override
             public void onLiveM3U8Callback(VideoTaskItem info) {
-                if(DEBUG)Log.e("wzh", "onLiveM3U8Callback: " + info);
+                if (DEBUG) Log.e("wzh", "onLiveM3U8Callback: " + info);
                 LogUtils.w(TAG, "onLiveM3U8Callback cannot be cached.");
                 taskItem.setErrorCode(DownloadExceptionUtils.LIVE_M3U8_ERROR);
                 taskItem.setTaskState(VideoTaskState.ERROR);
@@ -310,7 +310,7 @@ public class VideoDownloadManager {
 
             @Override
             public void onM3U8InfoFailed(Throwable error) {
-                if(DEBUG) Log.e("wzh", "onM3U8InfoFailed: ", error);
+                if (DEBUG) Log.e("wzh", "onM3U8InfoFailed: ", error);
                 LogUtils.w(TAG, "onM3U8InfoFailed : " + error);
                 int errorCode = DownloadExceptionUtils.getErrorCode(error);
                 taskItem.setErrorCode(errorCode);
@@ -408,7 +408,7 @@ public class VideoDownloadManager {
                         taskItem.setDownloadSize(totalSize);
                         taskItem.setIsCompleted(true);
                         taskItem.setPercent(100f);
-                        taskItem.setFileName(taskItem.makeFileName());
+//                        taskItem.setFileName(taskItem.makeFileName());
                         taskItem.setFilePath(taskItem.getSaveDir() + File.separator + taskItem.getFileName());
                         mVideoDownloadHandler.obtainMessage(DownloadConstants.MSG_DOWNLOAD_SUCCESS, taskItem).sendToTarget();
                     }
@@ -452,7 +452,7 @@ public class VideoDownloadManager {
         synchronized (mQueueLock) {
             List<VideoTaskItem> taskList = mVideoDownloadQueue.getDownloadList();
             for (VideoTaskItem taskItem : taskList) {
-                 if (taskItem.isRunningTask()) {
+                if (taskItem.isRunningTask()) {
                     pauseDownloadTask(taskItem);
                 }
             }
@@ -478,7 +478,7 @@ public class VideoDownloadManager {
         VideoDownloadTask task = mVideoDownloadTaskMap.remove(url);
         if (task != null) {
             task.pauseDownload();
-        }else{
+        } else {
             taskItem.setTaskState(VideoTaskState.PAUSE);
             mVideoDownloadHandler.obtainMessage(DownloadConstants.MSG_DOWNLOAD_PAUSE, taskItem).sendToTarget();
         }
@@ -676,7 +676,7 @@ public class VideoDownloadManager {
             taskItem.setFileHash(VideoDownloadUtils.computeMD5(taskItem.getUrl()));
         }
 //        final String outName = taskItem.getTitle() + ".mp4";
-        final String outName = "video.mp4"; //输出名称可能导致无法播放，固定死
+        final String outName = VideoDownloadUtils.VIDEO_NAME; //输出名称可能导致无法播放，固定死
         final String outputPath = inputPath.substring(0, inputPath.lastIndexOf("/")) + File.separator + outName;
         File outputFile = new File(outputPath);
         if (outputFile.exists()) {
@@ -692,8 +692,8 @@ public class VideoDownloadManager {
                 taskItem.setMimeType(Video.Mime.MIME_TYPE_MP4);
                 taskItem.setVideoType(Video.Type.MP4_TYPE);
                 taskItem.setTaskState(VideoTaskState.SUCCESS);
-                listener.onCallback(taskItem);
 
+                mVideoDatabaseHelper.markDownloadProgressInfoUpdateEvent(taskItem);
                 //delete source file
                 File outputFile = new File(outputPath);
                 File[] files = outputFile.getParentFile().listFiles();
@@ -703,6 +703,8 @@ public class VideoDownloadManager {
                         subFile.delete();
                     }
                 }
+
+                listener.onCallback(taskItem);
             }
 
             @Override

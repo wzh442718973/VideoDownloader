@@ -230,21 +230,32 @@ public class VideoTaskItem implements Cloneable {
     }
 
     public String getFileName() {
+        if (mFileName == null || mFileName.isEmpty()) {
+            if (isHlsType()) {
+                mFileName = "index.m3u8";
+            } else {
+                mFileName = VideoDownloadUtils.VIDEO_NAME;//文件名固定
+            }
+        }
         return mFileName;
     }
 
     public void setFilePath(String path) {
         mFilePath = path;
     }
-
-    public String makeFileName() {
-        if (isHlsType()) {
-            return "index.m3u8";//getTitle() + "_" + VideoDownloadUtils.LOCAL_M3U8;
-        } else {
-//            return getTitle() + VideoDownloadUtils.VIDEO_SUFFIX;
-            return "video" + VideoDownloadUtils.VIDEO_SUFFIX;//文件名固定
-        }
-    }
+//
+//    public String makeFileName() {
+//        if (mFileName == null || mFileName.isEmpty()) {
+//            if (isHlsType()) {
+//                return "index.m3u8";//getTitle() + "_" + VideoDownloadUtils.LOCAL_M3U8;
+//            } else {
+////            return getTitle() + VideoDownloadUtils.VIDEO_SUFFIX;
+//                return "video" + VideoDownloadUtils.VIDEO_SUFFIX;//文件名固定
+//            }
+//        } else {
+//            return mFileName;
+//        }
+//    }
 
     public String getFilePath() {
         return mFilePath;

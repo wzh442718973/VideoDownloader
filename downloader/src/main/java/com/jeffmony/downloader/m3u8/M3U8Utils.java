@@ -33,7 +33,7 @@ public class M3U8Utils {
      * @throws IOException
      */
     public static M3U8 parseNetworkM3U8Info(String videoUrl, Map<String, String> headers, int retryCount) throws IOException {
-        Log.e("wzh", "parseNetworkM3U8Info: " + videoUrl);
+        LogUtils.e("wzh", "parseNetworkM3U8Info: " + videoUrl);
         BufferedReader bufferedReader = null;
         try {
             HttpURLConnection connection = HttpUtils.getConnection(videoUrl, headers, VideoDownloadUtils.getDownloadConfig().shouldIgnoreCertErrors());
