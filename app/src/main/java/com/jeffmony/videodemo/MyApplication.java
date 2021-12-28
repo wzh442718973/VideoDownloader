@@ -23,7 +23,7 @@ public class MyApplication extends Application {
         LogUtils.setLogLevel(LOG_DEBUG);
         File file = VideoStorageUtils.getVideoCacheDir(this);
         if (!file.exists()) {
-            file.mkdir();
+            file.mkdirs();
         }
         VideoDownloadConfig config = new VideoDownloadManager.Build(this)
                 .setCacheRoot(file.getAbsolutePath())

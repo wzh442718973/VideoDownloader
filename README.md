@@ -54,7 +54,7 @@ dependencies {
 ```
 File file = VideoDownloadUtils.getVideoCacheDir(this);
 if (!file.exists()) {
-    file.mkdir();
+    file.mkdirs();
 }
 VideoDownloadConfig config = new VideoDownloadManager.Build(this)
     .setCacheRoot(file)

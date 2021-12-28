@@ -175,7 +175,7 @@ public class VideoInfoParserManager {
                 String saveName = VideoDownloadUtils.computeMD5(taskItem.getUrl());
                 File dir = new File(VideoDownloadUtils.getDownloadConfig().getCacheRoot(), saveName);
                 if (!dir.exists()) {
-                    dir.mkdir();
+                    dir.mkdirs();
                 }
 
                 M3U8Utils.createRemoteM3U8(dir, m3u8);
